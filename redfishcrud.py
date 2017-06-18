@@ -1,19 +1,47 @@
 #!flask/bin/python
+
 import urllib, requests
 from flask import Flask, jsonify, request, json
+from flask_httpauth import HTTPBasicAuth
 
+auth = HTTPBasicAuth()
 app= Flask(__name__)
 
-@app.route('/todo/api/v1.0/roles', methods=['GET'])
+@auth.get_password
+def get_password(username):
+	if username == 'admin':
+		return 'admin123'
+	return None
+
+@auth.error_handler
+def unauthorizaed():
+	return make_response(jsonify({'error': 'Flask unauthorized access'}), 401)
+
+@app.errorhandler(400)
+def bad_request(error):
+	return make_response(jsonify({'error':'Bad request'}), 400)
+
+@app.errorhandler(404)
+def not_found(error):
+	return make_response(jsonify({'error':'Not found'}), 404)
+
+@app.errorhandler(405)
+def method_not_allowed(error):
+	return make_response(jsonify({'error':'Method not allowed'}), 405)
+
+@app.route('/todo/api/v1.0/roles/get', methods=['GET'])
+@auth.login_required
 def get_role():
 
 	url = "https://localhost:8443/api/current/roles"
 
-	headers = {"Content-Type": "application/json", "Authorization": "JWT eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyIjoiYWRtaW4iLCJpYXQiOjE0OTc0MzI0OTMsImV4cCI6MTQ5NzUxODg5M30.NpCbb-piLMUwln0j92wPyMUMxo4VLgbY7hkWy25gqSw"}
+	token = "JWT " + request.headers.get('Token')
 
-	request = requests.get(url, headers=headers, verify=False)
+	headers = {"Content-Type": "application/json", "Authorization": token }
 
-	return request.text
+	response = requests.get(url, headers=headers, verify=False)
+
+	return response.text
 
 @app.route('/todo/api/v1.0/roles/post', methods=['POST'])
 def post_role():
@@ -31,7 +59,9 @@ def post_role():
 
 	url = "https://localhost:8443/api/current/roles"
 
-	headers = {"Content-Type": "application/json", "Authorization": "JWT eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyIjoiYWRtaW4iLCJpYXQiOjE0OTc0MzI0OTMsImV4cCI6MTQ5NzUxODg5M30.NpCbb-piLMUwln0j92wPyMUMxo4VLgbY7hkWy25gqSw"}
+	token = "JWT " + request.headers.get('Token')
+
+	headers = {"Content-Type": "application/json", "Authorization": token }
 
 	payload = '{"privileges": ' + privileges2 + ', "role": "' + role + '"}'
 
@@ -58,7 +88,9 @@ def patch_role():
 
 	url = base_url + "/" + role
 
-	headers = {"Content-Type": "application/json", "Authorization": "JWT eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyIjoiYWRtaW4iLCJpYXQiOjE0OTc0MzI0OTMsImV4cCI6MTQ5NzUxODg5M30.NpCbb-piLMUwln0j92wPyMUMxo4VLgbY7hkWy25gqSw"}
+	token = "JWT " + request.headers.get('Token')
+
+	headers = {"Content-Type": "application/json", "Authorization": token }
 
 	payload = '{"privileges": ' + privileges2 + '}'
 
@@ -76,28 +108,33 @@ def delete_role():
 
 	url = base_url + "/" + role
 
-	headers = {"Content-Type": "application/json", "Authorization": "JWT eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyIjoiYWRtaW4iLCJpYXQiOjE0OTc0MzI0OTMsImV4cCI6MTQ5NzUxODg5M30.NpCbb-piLMUwln0j92wPyMUMxo4VLgbY7hkWy25gqSw"}
+	token = "JWT " + request.headers.get('Token')
+
+	headers = {"Content-Type": "application/json", "Authorization": token }
 
 	response = requests.delete(url, headers=headers, verify=False)
 
 	return response.text
 
-@app.route('/todo/api/v1.0/ibms', methods=['GET'])
+@app.route('/todo/api/v1.0/ibms/get', methods=['GET'])
 def get_ibm():
 	url = "https://localhost:8443/api/current/ibms"
 
-	headers = { "Content-Type": "application/json", "Authorization": "JWT eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyIjoiYWRtaW4iLCJpYXQiOjE0OTc0MzI0OTMsImV4cCI6MTQ5NzUxODg5M30.NpCbb-piLMUwln0j92wPyMUMxo4VLgbY7hkWy25gqSw"}
+	token = "JWT " + request.headers.get('Token')
+
+	headers = {"Content-Type": "application/json", "Authorization": token }
 
 	response = requests.get(url, headers=headers, verify=False)
 
 	return response.text
 
 @app.route('/todo/api/v1.0/ibms/post', methods=['PUT'])
-
 def create_ibms():
 	url = "https://localhost:8443/api/current/ibms"
 
-	headers = {"Content-Type": "application/json", "Authorization": "JWT eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyIjoiYWRtaW4iLCJpYXQiOjE0OTc0MzI0OTMsImV4cCI6MTQ5NzUxODg5M30.NpCbb-piLMUwln0j92wPyMUMxo4VLgbY7hkWy25gqSw"}
+	token = "JWT " + request.headers.get('Token')
+
+	headers = {"Content-Type": "application/json", "Authorization": token }
 
 	nodeId = request.json['nodeId']
 	service = request.json['service']
@@ -111,11 +148,12 @@ def create_ibms():
 	return response.text
 
 @app.route('/todo/api/v1.0/ibms/patch', methods=['PATCH'])
-
 def patch_ibms():
 	base_url = "https://localhost:8443/api/current/ibms"
 
-	headers = {"Content-Type": "application/json", "Authorization": "JWT eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyIjoiYWRtaW4iLCJpYXQiOjE0OTc0MzI0OTMsImV4cCI6MTQ5NzUxODg5M30.NpCbb-piLMUwln0j92wPyMUMxo4VLgbY7hkWy25gqSw"}
+	token = "JWT " + request.headers.get('Token')
+
+	headers = {"Content-Type": "application/json", "Authorization": token }
 
 	nodeId = request.json['nodeId']
 
@@ -132,13 +170,14 @@ def patch_ibms():
 	return response.text
 
 @app.route('/todo/api/v1.0/ibms/delete', methods=['DELETE'])
-
 def delete_ibms():
 	base_url = "https://localhost:8443/api/current/ibms"
 
 	nodeId = request.json['nodeId']
 
-	headers = {"Content-Type": "application/json", "Authorization": "JWT eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyIjoiYWRtaW4iLCJpYXQiOjE0OTc0MzI0OTMsImV4cCI6MTQ5NzUxODg5M30.NpCbb-piLMUwln0j92wPyMUMxo4VLgbY7hkWy25gqSw"}
+	token = "JWT " + request.headers.get('Token')
+
+	headers = {"Content-Type": "application/json", "Authorization": token }
 
 	url = base_url + "/" + nodeId
 
