@@ -44,6 +44,7 @@ def get_role():
 	return response.text
 
 @app.route('/todo/api/v1.0/roles/post', methods=['POST'])
+@auth.login_required
 def post_role():
 
 	role = request.json['role']
@@ -70,6 +71,7 @@ def post_role():
 	return response.text
 
 @app.route('/todo/api/v1.0/roles/patch', methods=['PATCH'])
+@auth.login_required
 def patch_role():
 
 	base_url = "https://localhost:8443/api/current/roles"
@@ -99,7 +101,7 @@ def patch_role():
 	return response.text
 
 @app.route('/todo/api/v1.0/roles/delete', methods=['DELETE'])
-
+@auth.login_required
 def delete_role():
 
 	base_url = "https://localhost:8443/api/current/roles"
@@ -117,7 +119,9 @@ def delete_role():
 	return response.text
 
 @app.route('/todo/api/v1.0/ibms/get', methods=['GET'])
+@auth.login_required
 def get_ibm():
+
 	url = "https://localhost:8443/api/current/ibms"
 
 	token = "JWT " + request.headers.get('Token')
@@ -129,7 +133,9 @@ def get_ibm():
 	return response.text
 
 @app.route('/todo/api/v1.0/ibms/post', methods=['PUT'])
+@auth.login_required
 def create_ibms():
+
 	url = "https://localhost:8443/api/current/ibms"
 
 	token = "JWT " + request.headers.get('Token')
@@ -148,7 +154,9 @@ def create_ibms():
 	return response.text
 
 @app.route('/todo/api/v1.0/ibms/patch', methods=['PATCH'])
+@auth.login_required
 def patch_ibms():
+
 	base_url = "https://localhost:8443/api/current/ibms"
 
 	token = "JWT " + request.headers.get('Token')
@@ -170,7 +178,9 @@ def patch_ibms():
 	return response.text
 
 @app.route('/todo/api/v1.0/ibms/delete', methods=['DELETE'])
+@auth.login_required
 def delete_ibms():
+
 	base_url = "https://localhost:8443/api/current/ibms"
 
 	nodeId = request.json['nodeId']
