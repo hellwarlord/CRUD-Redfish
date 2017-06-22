@@ -28,7 +28,7 @@ def createuser():
         token = request.headers.get('token')
         url = "https://localhost:8443/api/current/users"
 
-        payload = '{ "username":"%s", "password":"%s", "role":"%s" }' % (user_name, user_password, u$
+        payload = '{ "username":"%s", "password":"%s", "role":"%s" }' % (user_name, user_password, user_role)
 
         headers= {
 
