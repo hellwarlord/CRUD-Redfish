@@ -1,10 +1,34 @@
 #!flask/bin/python
 
-from flask import Flask, jsonify, request, abort
+from flask import Flask, jsonify, request, abort, make_response
+from flask_httpauth import HTTPBasicAuth
 
 import requests
 
 app = Flask(__name__)
+
+
+auth = HTTPBasicAuth()
+
+
+@auth.error_handler
+def unauthorized():
+        return make_response(jsonify({'error': 'Flask unauthorized access'}), 401)
+
+@app.errorhandler(400)
+def bad_request(error):
+        return make_response(jsonify({'error':'Bad request'}), 400)
+
+@app.errorhandler(404)
+def not_found(error):
+        return make_response(jsonify({'error':'Not found'}), 404)
+
+@app.errorhandler(405)
+def method_not_allowed(error):
+        return make_response(jsonify({'error':'Method not allowed'}), 405)
+
+
+
 
 @app.route('/rackhd/hooks', methods=['GET'])
 def readhook():
@@ -17,9 +41,9 @@ def readhook():
                 "Content-Type":"application/json",
                 "Authorization":"JWT "+token
         }
-        r = requests.get(url, headers=headers, verify=False)
+        get_hooks = requests.get(url, headers=headers, verify=False)
 
-        return r.text
+        return get_hooks.text
 
 @app.route('/rackhd/hooks/create', methods=['POST'])
 def createuser():
@@ -37,8 +61,8 @@ def createuser():
                 "Authorization": "JWT "+token
         }
 
-        r = requests.post(url, headers=headers, data=payload, verify=False)
-        return  r.text
+        post_hook = requests.post(url, headers=headers, data=payload, verify=False)
+        return  post_hook.text
 
 @app.route('/rackhd/hooks/update', methods=['PATCH'])
 def patchuser():
@@ -58,9 +82,9 @@ def patchuser():
 
         payload = '{ "name": "%s" }' % new_name
 
-        r = requests.patch(url, data=payload, headers=headers, verify=False)
+        patch_hook = requests.patch(url, data=payload, headers=headers, verify=False)
 
-        return r.text
+        return patch_hook.text
 
 @app.route('/rackhd/hooks/delete', methods=['DELETE'])
 def deletehook():
