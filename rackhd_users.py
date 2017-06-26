@@ -1,22 +1,46 @@
 #!flask/bin/python
 
-from flask import Flask, jsonify, request, abort
+from flask import Flask, jsonify, request, abort, make_response
+from flask_httpauth import HTTPBasicAuth
 
 import requests
 
 app = Flask(__name__)
 
+
+auth = HTTPBasicAuth()
+
+
+@auth.error_handler
+def unauthorized():
+	return make_response(jsonify({'error': 'Flask unauthorized access'}), 401)
+
+@app.errorhandler(400)
+def bad_request(error):
+	return make_response(jsonify({'error':'Bad request'}), 400)
+
+@app.errorhandler(404)
+def not_found(error):
+	return make_response(jsonify({'error':'Not found'}), 404)
+
+@app.errorhandler(405)
+def method_not_allowed(error):
+	return make_response(jsonify({'error':'Method not allowed'}), 405)
+
+
 @app.route('/rackhd/users', methods=['GET'])
 def readuser():
         token = request.headers.get('token')
-        url = "https://localhost:8443/api/current/users"
+
+	url = "https://localhost:8443/api/current/users"
         headers = {
                 "Content-Type":"application/json",
                 "Authorization":"JWT "+token
         }
-        r = requests.get(url, headers=headers, verify=False)
 
-        return r.text
+	get_users = requests.get(url, headers=headers, verify=False)
+
+        return get_users.text
 
 @app.route('/rackhd/users/create', methods=['POST'])
 def createuser():
@@ -36,8 +60,8 @@ def createuser():
                 "Authorization": "JWT "+token
         }
 
-        r = requests.post(url, headers=headers, data=payload, verify=False)
-        return  r.text
+        post_user = requests.post(url, headers=headers, data=payload, verify=False)
+        return  post_user.text
 
 @app.route('/rackhd/users/update', methods=['PATCH'])
 def patchuser():
@@ -55,14 +79,14 @@ def patchuser():
         "Authorization":"JWT "+token
         }
 
-        r = requests.delete(url, headers=headers, verify=False)
+        delete_user = requests.delete(url, headers=headers, verify=False)
 
         url = "https://localhost:8443/api/current/users"
 
 	payload = '{ "username":"%s", "password":"%s", "role":"%s" }' % (user_name, user_password, user_role)
 
-        r = requests.post(url, headers=headers, data=payload, verify=False)
-        return r.text
+        post_user = requests.post(url, headers=headers, data=payload, verify=False)
+        return post_user.text
 
 @app.route('/rackhd/users/delete', methods=['DELETE'])
 def deleteuser():
@@ -77,8 +101,8 @@ def deleteuser():
         "Authorization":"JWT "+token
         }
 
-        r = requests.delete(url, headers=headers, verify=False)
-        return r.text
+        delete_user = requests.delete(url, headers=headers, verify=False)
+        return delete_user.text
 
 if __name__ == '__main__':
         app.run(debug=True)
