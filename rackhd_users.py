@@ -1,19 +1,26 @@
 #!flask/bin/python
 
 from flask import Flask, jsonify, request, abort, make_response
-from flask_httpauth import HTTPBasicAuth
+import requests,json
 
-import requests
+
+from flask_httpauth import HTTPBasicAuth
+auth = HTTPBasicAuth()
 
 app = Flask(__name__)
 
 
-auth = HTTPBasicAuth()
-
+@auth.get_password
+def get_password(username):
+        if username == 'admin':
+                return 'admin123'
+        return None
 
 @auth.error_handler
 def unauthorized():
 	return make_response(jsonify({'error': 'Flask unauthorized access'}), 401)
+
+
 
 @app.errorhandler(400)
 def bad_request(error):
@@ -29,6 +36,7 @@ def method_not_allowed(error):
 
 
 @app.route('/rackhd/users', methods=['GET'])
+@auth.login_required
 def readuser():
         token = request.headers.get('token')
 
@@ -43,6 +51,7 @@ def readuser():
         return get_users.text
 
 @app.route('/rackhd/users/create', methods=['POST'])
+@auth.login_required
 def createuser():
 
         user_name = request.json["username"]
@@ -64,6 +73,7 @@ def createuser():
         return  post_user.text
 
 @app.route('/rackhd/users/update', methods=['PATCH'])
+@auth.login_required
 def patchuser():
 
         user_name = request.json["username"]
@@ -89,6 +99,7 @@ def patchuser():
         return post_user.text
 
 @app.route('/rackhd/users/delete', methods=['DELETE'])
+@auth.login_required
 def deleteuser():
         user_name = request.json["username"]
 
