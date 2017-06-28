@@ -1,19 +1,26 @@
 #!flask/bin/python
 
 from flask import Flask, jsonify, request, abort, make_response
-from flask_httpauth import HTTPBasicAuth
+import requests,json
 
-import requests
+
+from flask_httpauth import HTTPBasicAuth
+auth = HTTPBasicAuth()
 
 app = Flask(__name__)
 
 
-auth = HTTPBasicAuth()
-
+@auth.get_password
+def get_password(username):
+        if username == 'admin':
+                return 'admin123'
+        return None
 
 @auth.error_handler
 def unauthorized():
         return make_response(jsonify({'error': 'Flask unauthorized access'}), 401)
+
+
 
 @app.errorhandler(400)
 def bad_request(error):
@@ -31,6 +38,7 @@ def method_not_allowed(error):
 
 
 @app.route('/rackhd/hooks', methods=['GET'])
+@auth.login_required
 def readhook():
 
         token = request.headers.get('token')
@@ -46,7 +54,8 @@ def readhook():
         return get_hooks.text
 
 @app.route('/rackhd/hooks/create', methods=['POST'])
-def createuser():
+@auth.login_required
+def createhook():
 
         url_name = request.json["url"]
 
@@ -65,7 +74,8 @@ def createuser():
         return  post_hook.text
 
 @app.route('/rackhd/hooks/update', methods=['PATCH'])
-def patchuser():
+@auth.login_required
+def patchhook():
 
         user_id  = request.json["id"]
         new_name = request.json["name"]
@@ -87,6 +97,7 @@ def patchuser():
         return patch_hook.text
 
 @app.route('/rackhd/hooks/delete', methods=['DELETE'])
+@auth.login_required
 def deletehook():
         user_id = request.json["id"]
 
